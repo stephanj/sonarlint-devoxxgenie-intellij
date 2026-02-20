@@ -22,8 +22,10 @@ package org.sonarlint.intellij.finding.hotspot;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.vfs.VirtualFile;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.sonarlint.intellij.finding.FindingContext;
@@ -34,6 +36,7 @@ import org.sonarsource.sonarlint.core.rpc.protocol.backend.hotspot.HotspotStatus
 import org.sonarsource.sonarlint.core.rpc.protocol.backend.rules.ImpactDto;
 import org.sonarsource.sonarlint.core.rpc.protocol.backend.rules.VulnerabilityProbability;
 import org.sonarsource.sonarlint.core.rpc.protocol.client.hotspot.RaisedHotspotDto;
+import org.sonarsource.sonarlint.core.rpc.protocol.common.IssueSeverity;
 import org.sonarsource.sonarlint.core.rpc.protocol.common.RuleType;
 
 public class LiveSecurityHotspot extends LiveFinding {
@@ -49,6 +52,20 @@ public class LiveSecurityHotspot extends LiveFinding {
     super(module, hotspot, virtualFile, range, context, quickFixes);
     this.vulnerabilityProbability = hotspot.getVulnerabilityProbability();
     this.status = mapStatus(hotspot.getStatus());
+  }
+
+  /**
+   * Restoration constructor for deserializing persisted findings.
+   */
+  public LiveSecurityHotspot(Module module, UUID backendId, VirtualFile virtualFile, @Nullable RangeMarker range,
+    String message, String ruleKey, boolean isOnNewCode, boolean resolved, boolean isMqrMode,
+    @Nullable IssueSeverity severity, @Nullable CleanCodeAttribute cleanCodeAttribute,
+    List<ImpactDto> impacts, @Nullable Instant introductionDate,
+    VulnerabilityProbability vulnerabilityProbability, HotspotStatus hotspotStatus) {
+    super(backendId, module, virtualFile, range, message, ruleKey, isOnNewCode, resolved, isMqrMode,
+      severity, cleanCodeAttribute, impacts, introductionDate, null);
+    this.vulnerabilityProbability = vulnerabilityProbability;
+    this.status = hotspotStatus;
   }
 
   private static HotspotStatus mapStatus(@Nullable HotspotStatus status) {

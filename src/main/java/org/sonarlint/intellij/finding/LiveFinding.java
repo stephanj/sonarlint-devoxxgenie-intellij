@@ -109,6 +109,42 @@ public abstract class LiveFinding implements Finding {
     }
   }
 
+  /**
+   * Restoration constructor for deserializing persisted findings.
+   * Used when restoring report findings after IDE restart.
+   */
+  protected LiveFinding(UUID backendId, Module module, VirtualFile virtualFile, @Nullable RangeMarker range,
+    String message, String ruleKey, boolean isOnNewCode, boolean resolved, boolean isMqrMode,
+    @Nullable IssueSeverity severity, @Nullable CleanCodeAttribute cleanCodeAttribute,
+    List<ImpactDto> impacts, @Nullable Instant introductionDate, @Nullable String ruleDescriptionContextKey) {
+    this.backendId = backendId;
+    this.serverFindingKey = null;
+    this.module = module;
+    this.range = range;
+    this.message = message;
+    this.ruleKey = ruleKey;
+    this.virtualFile = virtualFile;
+    this.uid = UID_GEN.getAndIncrement();
+    this.context = null;
+    this.quickFixes = Collections.emptyList();
+    this.ruleDescriptionContextKey = ruleDescriptionContextKey;
+    this.introductionDate = introductionDate;
+    this.isOnNewCode = isOnNewCode;
+    this.resolved = resolved;
+    this.isMqrMode = isMqrMode;
+    this.severity = severity;
+    this.cleanCodeAttribute = cleanCodeAttribute;
+    this.impacts = impacts;
+    if (!impacts.isEmpty()) {
+      var highestQualityImpact = Collections.max(impacts, Comparator.comparing(ImpactDto::getImpactSeverity));
+      this.highestQuality = SoftwareQuality.fromDto(highestQualityImpact.getSoftwareQuality());
+      this.highestImpact = ImpactSeverity.fromDto(highestQualityImpact.getImpactSeverity());
+    } else {
+      this.highestQuality = null;
+      this.highestImpact = null;
+    }
+  }
+
   @NotNull
   public UUID getId() {
     return getBackendId();

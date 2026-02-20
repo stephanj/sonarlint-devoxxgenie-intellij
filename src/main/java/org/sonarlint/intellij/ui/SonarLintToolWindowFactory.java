@@ -27,6 +27,7 @@ import com.intellij.openapi.wm.ToolWindowType;
 import com.intellij.ui.content.ContentManager;
 import org.sonarlint.intellij.actions.SonarLintToolWindow;
 import org.sonarlint.intellij.ui.currentfile.CurrentFilePanel;
+import org.sonarlint.intellij.ui.report.ReportTabManager;
 
 import static org.sonarlint.intellij.common.util.SonarLintUtils.getService;
 import static org.sonarlint.intellij.ui.ToolWindowConstants.HELP_AND_FEEDBACK_TAB_TITLE;
@@ -49,6 +50,7 @@ public class SonarLintToolWindowFactory implements ToolWindowFactory {
       addHelpAndFeedbackTab(project, toolWindow);
       toolWindow.setType(ToolWindowType.DOCKED, null);
       contentManager.addContentManagerListener(sonarLintToolWindow);
+      getService(project, ReportTabManager.class).restorePersistedReport();
     });
   }
 
