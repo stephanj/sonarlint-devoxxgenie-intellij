@@ -67,4 +67,22 @@ class FilterSettingsService {
             settings.defaultFindingsScope = scope.name
         }
     }
+
+    fun getDefaultGroupMode(): GroupMode {
+        return try {
+            GroupMode.valueOf(getGlobalSettings().defaultGroupMode)
+        } catch (_: IllegalArgumentException) {
+            GroupMode.FILE
+        }
+    }
+
+    fun setDefaultGroupMode(groupMode: GroupMode) {
+        setDefaultGroupMode(groupMode, getGlobalSettings())
+    }
+
+    fun setDefaultGroupMode(groupMode: GroupMode, settings: SonarLintGlobalSettings) {
+        if (settings.defaultGroupMode != groupMode.name) {
+            settings.defaultGroupMode = groupMode.name
+        }
+    }
 }

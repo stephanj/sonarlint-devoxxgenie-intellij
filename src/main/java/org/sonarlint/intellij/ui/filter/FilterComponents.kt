@@ -109,6 +109,13 @@ object FilterComponentFactory {
             SortMode.values().forEach { addItem(it) }
         }
     }
+
+    fun createGroupCombo(): ComboBox<GroupMode> {
+        return ComboBox<GroupMode>().apply {
+            toolTipText = "Group findings by file or rule"
+            GroupMode.values().forEach { addItem(it) }
+        }
+    }
     
     fun createFocusOnNewCodeCheckBox(): JBCheckBox {
         return JBCheckBox().apply {

@@ -57,6 +57,7 @@ import org.sonarlint.intellij.ui.filter.FilterSettingsService
 import org.sonarlint.intellij.ui.filter.FilteredFindings
 import org.sonarlint.intellij.ui.filter.FiltersPanel
 import org.sonarlint.intellij.ui.filter.FindingsFilter
+import org.sonarlint.intellij.ui.filter.GroupMode
 import org.sonarlint.intellij.ui.filter.SortMode
 import org.sonarlint.intellij.util.SonarLintActions
 import org.sonarlint.intellij.util.ToolbarUtils
@@ -273,6 +274,7 @@ class ReportPanel(private val project: Project) : SimpleToolWindowPanel(false, f
         onSortingChanged = ::handleSortingChange,
         onFocusOnNewCodeChanged = ::handleFocusOnNewCodeChange,
         onFindingsScopeChanged = { /* No action needed for Report tab */ },
+        onGroupingChanged = ::handleGroupingChange,
         showScopeFilter = false // Hide scope filter in Report tab
     )
     
@@ -286,6 +288,15 @@ class ReportPanel(private val project: Project) : SimpleToolWindowPanel(false, f
             oldTaintsTreeBuilder.sortMode = sortMode
         }
         getService(FilterSettingsService::class.java).setDefaultSortMode(sortMode)
+        refreshFilteredView()
+    }
+
+    private fun handleGroupingChange(groupMode: GroupMode) {
+        with(treeManager) {
+            issuesTreeBuilder.groupMode = groupMode
+            oldIssuesTreeBuilder.groupMode = groupMode
+        }
+        getService(FilterSettingsService::class.java).setDefaultGroupMode(groupMode)
         refreshFilteredView()
     }
     
