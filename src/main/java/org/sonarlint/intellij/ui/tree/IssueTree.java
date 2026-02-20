@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import org.jetbrains.annotations.NonNls;
+import org.sonarlint.intellij.actions.CreateDevoxxGenieTasksFromNodeAction;
 import org.sonarlint.intellij.actions.DisableRuleAction;
 import org.sonarlint.intellij.actions.ExcludeFileAction;
 import org.sonarlint.intellij.actions.SonarAnalyzeFilesAction;
@@ -47,10 +48,13 @@ import org.sonarlint.intellij.actions.ReopenIssueAction;
 import org.sonarlint.intellij.actions.SuggestCodeFixIntentionAction;
 import org.sonarlint.intellij.finding.issue.LiveIssue;
 import org.sonarlint.intellij.ui.icons.SonarLintIcons;
+import org.sonarlint.intellij.ui.nodes.FileNode;
 import org.sonarlint.intellij.ui.nodes.IssueNode;
+import org.sonarlint.intellij.ui.nodes.SummaryNode;
 import org.sonarlint.intellij.ui.report.FindingSelectionManager;
 
 import static org.sonarlint.intellij.util.DataKeys.ISSUE_DATA_KEY;
+import static org.sonarlint.intellij.util.DataKeys.ISSUE_LIST_DATA_KEY;
 
 /**
  * Extends {@link Tree} to provide context data for actions and initialize it
@@ -82,6 +86,8 @@ public class IssueTree extends FindingTree implements DataProvider {
       return navigate();
     } else if (ISSUE_DATA_KEY.is(dataId)) {
       return getSelectedIssue();
+    } else if (ISSUE_LIST_DATA_KEY.is(dataId)) {
+      return getIssuesFromSelectedNode();
     }
 
     return null;
@@ -117,6 +123,8 @@ public class IssueTree extends FindingTree implements DataProvider {
     }
 
     var group = new DefaultActionGroup();
+    group.add(new CreateDevoxxGenieTasksFromNodeAction());
+    group.addSeparator();
     group.add(new SuggestCodeFixIntentionAction(getSelectedIssue()));
     group.add(ActionManager.getInstance().getAction(IdeActions.ACTION_EDIT_SOURCE));
     group.add(new MarkAsResolvedAction());
@@ -150,6 +158,34 @@ public class IssueTree extends FindingTree implements DataProvider {
       offset = 0;
     }
     return new OpenFileDescriptor(project, issue.file(), offset);
+  }
+
+  private java.util.List<LiveIssue> getIssuesFromSelectedNode() {
+    var node = getSelectedNode();
+    if (node instanceof IssueNode issueNode) {
+      return java.util.List.of(issueNode.issue());
+    } else if (node instanceof FileNode fileNode) {
+      var issues = new java.util.ArrayList<LiveIssue>();
+      for (int i = 0; i < fileNode.getChildCount(); i++) {
+        if (fileNode.getChildAt(i) instanceof IssueNode issueNode) {
+          issues.add(issueNode.issue());
+        }
+      }
+      return issues;
+    } else if (node instanceof SummaryNode summaryNode) {
+      var issues = new java.util.ArrayList<LiveIssue>();
+      for (int i = 0; i < summaryNode.getChildCount(); i++) {
+        if (summaryNode.getChildAt(i) instanceof FileNode fileNode) {
+          for (int j = 0; j < fileNode.getChildCount(); j++) {
+            if (fileNode.getChildAt(j) instanceof IssueNode issueNode) {
+              issues.add(issueNode.issue());
+            }
+          }
+        }
+      }
+      return issues;
+    }
+    return java.util.List.of();
   }
 
   @CheckForNull
