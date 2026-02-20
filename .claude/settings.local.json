@@ -29,7 +29,8 @@
       "Bash(git stash:*)",
       "Bash(git stash pop:*)",
       "Bash(python3:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(git checkout:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
