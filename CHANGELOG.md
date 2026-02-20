@@ -1,5 +1,14 @@
 # Changelog
 
+## 11.15.2 (2026-02-20)
+
+### Bug Fixes
+
+- **Rule description for restored findings**: Fixed "Couldn't find the rule description" error when clicking a restored issue after IDE restart. The rule key is now derived from the finding when the SLOOP backend no longer knows the old issue ID.
+- **"Fix with DevoxxGenie" button on restored findings**: The button now appears for restored issues by routing through the correct header update path that wires up the DevoxxGenie action.
+- **DevoxxGenie prompt for restored findings**: Clicking "Fix with DevoxxGenie" on a restored issue now works — `RangeMarker` is recreated from persisted offsets so the prompt builder can extract line number and code snippet.
+- **AI code fix availability persisted correctly**: `isAiCodeFixable` is now stored from the actual issue value instead of being hardcoded to `false`.
+
 ## 11.15.1 (2026-02-20)
 
 ### Report Panel
