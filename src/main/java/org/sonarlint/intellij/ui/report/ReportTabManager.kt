@@ -28,6 +28,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 import org.sonarlint.intellij.analysis.AnalysisResult
+import org.sonarlint.intellij.common.util.SonarLintUtils.getService
 import org.sonarlint.intellij.ui.ToolWindowConstants
 
 /**
@@ -98,8 +99,8 @@ class ReportTabManager(private val project: Project) {
     @Synchronized
     fun updateOrCreateReportTab(batchId: String, analysisResult: AnalysisResult, completedModules: Int = 1, expectedModules: Int = 1): String? {
         val existingTabTitle = batchToTabTitle[batchId]
-        
-        return if (existingTabTitle != null) {
+
+        val tabTitle = if (existingTabTitle != null) {
             // Update existing tab
             reportTabs[existingTabTitle]?.let { panel ->
                 // Update progress and merge new results with existing results
@@ -111,13 +112,24 @@ class ReportTabManager(private val project: Project) {
             // Create new tab (fallback if loading tab wasn't created)
             createReportTab(analysisResult, batchId)
         }
+
+        // Persist the report when all modules are complete
+        if (tabTitle != null && completedModules >= expectedModules) {
+            persistReport(tabTitle, analysisResult)
+        }
+
+        return tabTitle
     }
     
     /**
      * Creates a new report tab with the current timestamp and displays the analysis results.
      */
     fun createReportTab(analysisResult: AnalysisResult): String? {
-        return createReportTab(analysisResult, null)
+        val tabTitle = createReportTab(analysisResult, null)
+        if (tabTitle != null) {
+            persistReport(tabTitle, analysisResult)
+        }
+        return tabTitle
     }
     
     private fun createReportTab(analysisResult: AnalysisResult, batchId: String?): String? {
@@ -154,11 +166,41 @@ class ReportTabManager(private val project: Project) {
     fun getOpenReportTabs(): Set<String> {
         return reportTabs.keys.toSet()
     }
-    
+
+    /**
+     * Restores the last persisted report tab from disk.
+     * Called during tool window initialization to show the previous report after IDE restart.
+     */
+    fun restorePersistedReport() {
+        if (project.isDisposed) return
+
+        val persistenceService = getService(project, ReportPersistenceService::class.java)
+        val (tabTitle, analysisResult) = persistenceService.restoreReport() ?: return
+
+        val toolWindow = getToolWindow() ?: return
+        val contentManager = toolWindow.contentManager
+
+        val reportPanel = ReportPanel(project)
+        reportPanel.updateFindings(analysisResult)
+
+        val content = contentManager.factory.createContent(reportPanel, tabTitle, false).apply {
+            isCloseable = true
+            putUserData(REPORT_TAB_KEY, tabTitle)
+        }
+
+        contentManager.addContent(content)
+        reportTabs[tabTitle] = reportPanel
+    }
+
+    private fun persistReport(tabTitle: String, analysisResult: AnalysisResult) {
+        val persistenceService = getService(project, ReportPersistenceService::class.java)
+        persistenceService.saveReport(tabTitle, analysisResult)
+    }
+
     private fun getToolWindow(): ToolWindow? {
         return ToolWindowManager.getInstance(project).getToolWindow(ToolWindowConstants.TOOL_WINDOW_ID)
     }
-    
+
     companion object {
         private val REPORT_TAB_KEY = Key.create<String>("SONARLINT_REPORT_TAB_KEY")
     }

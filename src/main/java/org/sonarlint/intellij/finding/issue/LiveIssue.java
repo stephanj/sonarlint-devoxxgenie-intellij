@@ -22,15 +22,20 @@ package org.sonarlint.intellij.finding.issue;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.vfs.VirtualFile;
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import org.sonarlint.intellij.finding.FindingContext;
 import org.sonarlint.intellij.finding.Issue;
 import org.sonarlint.intellij.finding.LiveFinding;
 import org.sonarlint.intellij.finding.QuickFix;
+import org.sonarsource.sonarlint.core.client.utils.CleanCodeAttribute;
 import org.sonarsource.sonarlint.core.rpc.protocol.backend.issue.ResolutionStatus;
+import org.sonarsource.sonarlint.core.rpc.protocol.backend.rules.ImpactDto;
 import org.sonarsource.sonarlint.core.rpc.protocol.client.issue.RaisedIssueDto;
+import org.sonarsource.sonarlint.core.rpc.protocol.common.IssueSeverity;
 import org.sonarsource.sonarlint.core.rpc.protocol.common.RuleType;
 
 public class LiveIssue extends LiveFinding implements Issue {
@@ -54,6 +59,21 @@ public class LiveIssue extends LiveFinding implements Issue {
     }
     this.isAiCodeFixable = issue.isAiCodeFixable();
     this.status = issue.getResolutionStatus();
+  }
+
+  /**
+   * Restoration constructor for deserializing persisted findings.
+   */
+  public LiveIssue(Module module, UUID backendId, VirtualFile virtualFile, @Nullable RangeMarker range,
+    String message, String ruleKey, boolean isOnNewCode, boolean resolved, boolean isMqrMode,
+    @Nullable IssueSeverity severity, @Nullable CleanCodeAttribute cleanCodeAttribute,
+    List<ImpactDto> impacts, @Nullable Instant introductionDate,
+    @Nullable RuleType type, boolean isAiCodeFixable, @Nullable ResolutionStatus status) {
+    super(backendId, module, virtualFile, range, message, ruleKey, isOnNewCode, resolved, isMqrMode,
+      severity, cleanCodeAttribute, impacts, introductionDate, null);
+    this.type = type;
+    this.isAiCodeFixable = isAiCodeFixable;
+    this.status = status;
   }
 
   @CheckForNull
