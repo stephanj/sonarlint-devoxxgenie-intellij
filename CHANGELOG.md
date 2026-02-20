@@ -4,6 +4,7 @@
 
 ### Report Panel
 
+- **"Group by Rule" view**: A new "Group by:" combo in the filter panel lets you switch between grouping issues by file (default) or by rule key. When grouped by rule, the tree shows each rule with its issue count sorted by prevalence, with file nodes nested underneath. The summary text adapts to show "Found X issues across Y rules". The preference persists across IDE restarts.
 - **"Analyse file" context menu action**: Right-clicking a file node in the Issues, Security Hotspots, or Taint Vulnerabilities tree now shows an "Analyse file" option that triggers SonarQube for IDE analysis on the selected file. The action reuses the existing `SonarAnalyzeFilesAction` and is automatically hidden when a finding node is selected.
 
 ## 11.14.1 (2026-02-18)
