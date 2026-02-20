@@ -1,5 +1,11 @@
 # Changelog
 
+## 11.15.0 (2026-02-20)
+
+### Report Panel
+
+- **"Analyse file" context menu action**: Right-clicking a file node in the Issues, Security Hotspots, or Taint Vulnerabilities tree now shows an "Analyse file" option that triggers SonarQube for IDE analysis on the selected file. The action reuses the existing `SonarAnalyzeFilesAction` and is automatically hidden when a finding node is selected.
+
 ## 11.14.1 (2026-02-18)
 
 ### DevoxxGenie Integration

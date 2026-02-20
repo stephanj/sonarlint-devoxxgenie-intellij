@@ -43,6 +43,23 @@ class FindingTreeSummary(private val project: Project, private val treeContentKi
         text = computeText(filesCount, findingsCount, newCodePeriod)
     }
 
+    fun refreshWithRuleCount(rulesCount: Int, findingsCount: Int) {
+        lastFilesCount = rulesCount
+        lastFindingsCount = findingsCount
+        val newCodePeriod = getService(project, NewCodePeriodCache::class.java).periodAsString
+        emptyText = computeEmptyText(newCodePeriod)
+        text = if (findingsCount == 0) {
+            emptyText
+        } else {
+            RULE_GROUP_FORMAT.format(
+                findingsCount,
+                pluralizeFindingType(findingsCount),
+                rulesCount,
+                pluralize("rule", rulesCount)
+            )
+        }
+    }
+
     fun setScopeSuffix(suffix: String) {
         scopeSuffix = suffix
         // Regenerate text with the new scope suffix if we have existing data
@@ -122,6 +139,7 @@ class FindingTreeSummary(private val project: Project, private val treeContentKi
         private const val SINGLE_FILE_FORMAT = "Found %d %s%s%s"
         private const val MULTI_FILE_FORMAT = "Found %d %s%s in %d %s%s"
         private const val SCOPED_FORMAT = "Found %d %s%s %s%s"
+        private const val RULE_GROUP_FORMAT = "Found %d %s across %d %s"
 
         private fun pluralize(word: String, count: Int): String {
             return if (count == 1) word else word + "s"

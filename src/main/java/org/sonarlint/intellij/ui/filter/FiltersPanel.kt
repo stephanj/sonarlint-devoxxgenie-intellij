@@ -40,6 +40,7 @@ class FiltersPanel(
     private val onSortingChanged: (SortMode) -> Unit,
     private val onFocusOnNewCodeChanged: (Boolean) -> Unit,
     private val onFindingsScopeChanged: () -> Unit = {},
+    private val onGroupingChanged: (GroupMode) -> Unit = {},
     private val showScopeFilter: Boolean = true
 ) : JBPanel<FiltersPanel>() {
 
@@ -54,6 +55,8 @@ class FiltersPanel(
     val statusCombo = FilterComponentFactory.createStatusCombo()
     val quickFixLabel = FilterComponentFactory.createLabel("Fix suggestion:")
     val quickFixCheckBox = FilterComponentFactory.createQuickFixCheckBox()
+    val groupLabel = FilterComponentFactory.createLabel("Group by:")
+    val groupCombo = FilterComponentFactory.createGroupCombo()
     val sortLabel = FilterComponentFactory.createLabel("Sort by:")
     val sortCombo = FilterComponentFactory.createSortCombo()
     val focusOnNewCodeLabel = FilterComponentFactory.createLabel("New code:")
@@ -69,6 +72,7 @@ class FiltersPanel(
     var filterText = ""
     var filterSeverity: SeverityImpactFilter = SeverityImpactFilter.Severity(SeverityFilter.NO_FILTER)
     var filterStatus = StatusFilter.OPEN
+    private var groupMode = getService(FilterSettingsService::class.java).getDefaultGroupMode()
     private var sortMode = getService(FilterSettingsService::class.java).getDefaultSortMode()
     private var isMqrMode = true
 
@@ -86,6 +90,7 @@ class FiltersPanel(
         setupSeverityComponents()
         setupStatusComponents()
         setupQuickFixComponents()
+        setupGroupComponents()
         setupSortComponents()
         setupFocusOnNewCodeComponents()
         setupDefaultButton()
@@ -149,6 +154,19 @@ class FiltersPanel(
         }
     }
 
+    private fun setupGroupComponents() {
+        groupCombo.apply {
+            selectedItem = groupMode
+            addActionListener {
+                val newGroupMode = selectedItem as GroupMode
+                if (groupMode != newGroupMode) {
+                    groupMode = newGroupMode
+                    onGroupingChanged(groupMode)
+                }
+            }
+        }
+    }
+
     private fun setupSortComponents() {
         sortCombo.apply {
             selectedItem = sortMode
@@ -199,9 +217,12 @@ class FiltersPanel(
         add(FilterComponentFactory.createGroup(quickFixLabel, quickFixCheckBox))
         add(FilterComponentFactory.createSeparator())
         
+        add(FilterComponentFactory.createGroup(groupLabel, groupCombo))
+        add(FilterComponentFactory.createSeparator())
+
         add(FilterComponentFactory.createGroup(sortLabel, sortCombo))
         add(FilterComponentFactory.createSeparator())
-        
+
         add(FilterComponentFactory.createGroup(focusOnNewCodeLabel, focusOnNewCodeCheckBox))
         add(FilterComponentFactory.createSeparator())
         
@@ -211,6 +232,7 @@ class FiltersPanel(
     private fun resetFilters() {
         // Update internal state first
         findingsScope = FindingsScope.CURRENT_FILE
+        groupMode = GroupMode.FILE
         sortMode = SortMode.DATE
         filterSeverity = when (filterSeverity) {
             is SeverityImpactFilter.MqrImpact -> SeverityImpactFilter.MqrImpact(MqrImpactFilter.NO_FILTER)
@@ -220,9 +242,11 @@ class FiltersPanel(
         
         // Save preferences
         getService(FilterSettingsService::class.java).setDefaultFindingsScope(findingsScope)
+        getService(FilterSettingsService::class.java).setDefaultGroupMode(groupMode)
         getService(FilterSettingsService::class.java).setDefaultSortMode(sortMode)
 
         scopeCombo.selectedItem = findingsScope
+        groupCombo.selectedItem = groupMode
         sortCombo.selectedItem = sortMode
         searchField.text = ""
         severityCombo.selectedItem = when (filterSeverity) {
