@@ -28,6 +28,8 @@ class DataKeys {
     companion object {
         @JvmField
         val ISSUE_DATA_KEY = DataKey.create<LiveIssue>("sonarlint_issue")
+        @JvmField
+        val ISSUE_LIST_DATA_KEY = DataKey.create<List<LiveIssue>>("sonarlint_issue_list")
         val TAINT_VULNERABILITY_DATA_KEY = DataKey.create<LocalTaintVulnerability>("sonarlint_taint_vulnerability")
         val DEPENDENCY_RISK_DATA_KEY = DataKey.create<LocalDependencyRisk>("sonarlint_dependency_risk")
     }
