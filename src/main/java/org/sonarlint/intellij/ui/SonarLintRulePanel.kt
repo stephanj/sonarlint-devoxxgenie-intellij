@@ -314,7 +314,7 @@ class SonarLintRulePanel(private val project: Project, parent: Disposable) : JBL
     private fun updateUiComponents() {
         ApplicationManager.getApplication().assertIsDispatchThread()
         val finding = this.finding
-        val ruleKey = this.ruleKey
+        val ruleKey = this.ruleKey ?: finding?.getRuleKey()
         val issueDetails = this.issueDetails
         val ruleDetails = this.ruleDetails
         if (issueDetails != null && finding != null) {

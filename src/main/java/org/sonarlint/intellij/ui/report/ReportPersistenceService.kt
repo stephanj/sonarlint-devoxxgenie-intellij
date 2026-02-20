@@ -199,7 +199,7 @@ class ReportPersistenceService(private val project: Project) {
             introductionDate = issue.introductionDate?.toEpochMilli(),
             kind = "ISSUE",
             type = issue.getType()?.name,
-            isAiCodeFixable = false,
+            isAiCodeFixable = issue.isAiCodeFixable(),
             issueStatus = issue.status?.name,
             vulnerabilityProbability = null,
             hotspotStatus = null,
