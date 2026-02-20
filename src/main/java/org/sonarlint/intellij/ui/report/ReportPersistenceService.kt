@@ -22,6 +22,8 @@ package org.sonarlint.intellij.ui.report
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.editor.RangeMarker
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -231,6 +233,13 @@ class ReportPersistenceService(private val project: Project) {
         )
     }
 
+    private fun restoreRangeMarker(finding: PersistedFinding, virtualFile: VirtualFile): RangeMarker? {
+        if (finding.startOffset >= finding.endOffset) return null
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile) ?: return null
+        if (finding.endOffset > document.textLength) return null
+        return document.createRangeMarker(finding.startOffset, finding.endOffset)
+    }
+
     private fun restoreIssue(finding: PersistedFinding, module: Module, virtualFile: VirtualFile): LiveIssue {
         val impacts = finding.impacts.map {
             ImpactDto(
@@ -243,7 +252,7 @@ class ReportPersistenceService(private val project: Project) {
             module,
             UUID.fromString(finding.backendId),
             virtualFile,
-            null, // RangeMarker cannot be restored without loading the document
+            restoreRangeMarker(finding, virtualFile),
             finding.message,
             finding.ruleKey,
             finding.isOnNewCode,
@@ -264,7 +273,7 @@ class ReportPersistenceService(private val project: Project) {
             module,
             UUID.fromString(finding.backendId),
             virtualFile,
-            null, // RangeMarker cannot be restored without loading the document
+            restoreRangeMarker(finding, virtualFile),
             finding.message,
             finding.ruleKey,
             finding.isOnNewCode,

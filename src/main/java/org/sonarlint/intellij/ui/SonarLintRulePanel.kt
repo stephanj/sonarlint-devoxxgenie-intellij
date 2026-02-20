@@ -320,7 +320,7 @@ class SonarLintRulePanel(private val project: Project, parent: Disposable) : JBL
         if (issueDetails != null && finding != null) {
             handleIssueDescription(issueDetails, finding)
         } else if (ruleKey != null && ruleDetails != null) {
-            handleRuleDescription(ruleDetails)
+            handleRuleDescription(ruleDetails, finding)
         } else {
             handleDescriptionError()
         }
@@ -348,14 +348,27 @@ class SonarLintRulePanel(private val project: Project, parent: Disposable) : JBL
         updateParams(actualIssueDetails)
     }
 
-    private fun handleRuleDescription(actualRuleDetails: EffectiveRuleDetailsDto) {
+    private fun handleRuleDescription(actualRuleDetails: EffectiveRuleDetailsDto, actualFinding: Finding? = null) {
         disableEmptyDisplay(true)
-        updateHeader(actualRuleDetails)
+        updateHeader(actualRuleDetails, actualFinding)
         descriptionPanel.removeAll()
         val fileType = RuleLanguages.findFileTypeByRuleLanguage(actualRuleDetails.language)
+        val file = actualFinding?.file()
         actualRuleDetails.description.map(
-            { monolithDescription -> descriptionPanel.addMonolith(monolithDescription, fileType) },
-            { withSections -> descriptionPanel.addSections(withSections, fileType) }
+            { monolithDescription ->
+                if (actualFinding != null && actualFinding.isAiCodeFixable() && file != null) {
+                    descriptionPanel.addMonolithWithCodeFix(monolithDescription, fileType, actualFinding.getId(), file)
+                } else {
+                    descriptionPanel.addMonolith(monolithDescription, fileType)
+                }
+            },
+            { withSections ->
+                if (actualFinding != null && actualFinding.isAiCodeFixable() && file != null) {
+                    descriptionPanel.addSectionsWithCodeFix(withSections, fileType, actualFinding.getId(), file)
+                } else {
+                    descriptionPanel.addSections(withSections, fileType)
+                }
+            }
         )
         updateParams(actualRuleDetails)
     }
@@ -373,10 +386,14 @@ class SonarLintRulePanel(private val project: Project, parent: Disposable) : JBL
         mainPanel.withEmptyText(errorMessage)
     }
 
-    private fun updateHeader(ruleDetails: EffectiveRuleDetailsDto) {
+    private fun updateHeader(ruleDetails: EffectiveRuleDetailsDto, finding: Finding? = null) {
         setLabelText(ruleDetails.name)
         securityHotspotHeaderMessage.isVisible = finding is LiveSecurityHotspot
-        headerPanel.updateForServerIssue(ruleDetails)
+        if (finding is Issue) {
+            headerPanel.updateForIssue(project, ruleDetails.severityDetails, ruleDetails.key, finding, ruleDetails.name)
+        } else {
+            headerPanel.updateForServerIssue(ruleDetails)
+        }
     }
 
     private fun updateHeader(finding: Finding?, issueDetails: EffectiveIssueDetailsDto) {
