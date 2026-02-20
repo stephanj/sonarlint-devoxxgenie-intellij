@@ -1,5 +1,15 @@
 # Changelog
 
+## 11.15.1 (2026-02-20)
+
+### Report Panel
+
+- **Persist report across restarts**: The last analysis report is now saved to `.idea/sonarlint/report-cache.json` and automatically restored when the IDE reopens, so findings are no longer lost on restart.
+
+### DevoxxGenie Integration
+
+- **Customizable prompt template**: A new "DevoxxGenie" tab in Project Settings lets users edit the prompt template sent to DevoxxGenie when using "Fix with DevoxxGenie". Available placeholders: `{ruleName}`, `{ruleKey}`, `{message}`, `{filePath}`, `{line}`, `{codeSnippet}`. Includes a "Reset to Default" button.
+
 ## 11.15.0 (2026-02-20)
 
 ### Report Panel
