@@ -40,6 +40,22 @@ public final class SonarLintProjectSettings {
   private String projectKey = null;
   private List<String> fileExclusions = new ArrayList<>();
   private boolean bindingSuggestionsEnabled = true;
+  private String devoxxGeniePromptTemplate = DEFAULT_DEVOXX_GENIE_PROMPT_TEMPLATE;
+
+  public static final String DEFAULT_DEVOXX_GENIE_PROMPT_TEMPLATE =
+    "Fix the following SonarQube issue in my code.\n"
+      + "\n"
+      + "**Rule:** {ruleName} (`{ruleKey}`)\n"
+      + "**Issue:** {message}\n"
+      + "**File:** `{filePath}`\n"
+      + "**Line:** {line}\n"
+      + "\n"
+      + "**Code context:**\n"
+      + "```\n"
+      + "{codeSnippet}\n"
+      + "```\n"
+      + "\n"
+      + "Please suggest a fix for this issue. Explain what the problem is and provide the corrected code.\n";
 
   public boolean isVerboseEnabled() {
     return verboseEnabled || "true".equals(System.getProperty("sonarlint.logs.verbose"));
@@ -121,6 +137,14 @@ public final class SonarLintProjectSettings {
 
   public Map<String, String> getModuleMapping() {
     return moduleMapping;
+  }
+
+  public String getDevoxxGeniePromptTemplate() {
+    return devoxxGeniePromptTemplate;
+  }
+
+  public void setDevoxxGeniePromptTemplate(String devoxxGeniePromptTemplate) {
+    this.devoxxGeniePromptTemplate = devoxxGeniePromptTemplate;
   }
 
 }

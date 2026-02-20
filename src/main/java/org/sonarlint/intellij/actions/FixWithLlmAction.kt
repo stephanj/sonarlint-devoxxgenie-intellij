@@ -23,6 +23,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import org.sonarlint.intellij.common.ui.ReadActionUtils.Companion.computeReadActionSafely
+import org.sonarlint.intellij.config.Settings
 import org.sonarlint.intellij.finding.LiveFinding
 import org.sonarlint.intellij.integration.DevoxxGenieBridge
 import kotlin.math.max
@@ -33,11 +34,11 @@ object FixWithLlmAction {
     fun canFixWithLlm(): Boolean = DevoxxGenieBridge.isAvailable()
 
     fun fixWithLlm(project: Project, finding: LiveFinding, ruleName: String, ruleKey: String): Boolean {
-        val prompt = buildPrompt(finding, ruleName, ruleKey) ?: return false
+        val prompt = buildPrompt(project, finding, ruleName, ruleKey) ?: return false
         return DevoxxGenieBridge.sendPrompt(project, prompt)
     }
 
-    private fun buildPrompt(finding: LiveFinding, ruleName: String, ruleKey: String): String? {
+    private fun buildPrompt(project: Project, finding: LiveFinding, ruleName: String, ruleKey: String): String? {
         val file = finding.file() ?: return null
         val range = finding.range ?: return null
 
@@ -54,20 +55,14 @@ object FixWithLlmAction {
 
         val (line, snippet) = lineAndSnippet
 
-        return buildString {
-            appendLine("Fix the following SonarQube issue in my code.")
-            appendLine()
-            appendLine("**Rule:** $ruleName (`$ruleKey`)")
-            appendLine("**Issue:** ${finding.message}")
-            appendLine("**File:** `${file.path}`")
-            appendLine("**Line:** $line")
-            appendLine()
-            appendLine("**Code context:**")
-            appendLine("```")
-            appendLine(snippet)
-            appendLine("```")
-            appendLine()
-            appendLine("Please suggest a fix for this issue. Explain what the problem is and provide the corrected code.")
-        }
+        val template = Settings.getSettingsFor(project).devoxxGeniePromptTemplate
+
+        return template
+            .replace("{ruleName}", ruleName)
+            .replace("{ruleKey}", ruleKey)
+            .replace("{message}", finding.message ?: "")
+            .replace("{filePath}", file.path)
+            .replace("{line}", line.toString())
+            .replace("{codeSnippet}", snippet)
     }
 }

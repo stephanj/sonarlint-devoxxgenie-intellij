@@ -45,12 +45,14 @@ public class SonarLintProjectSettingsPanel implements Disposable {
   private final JPanel rootBindPane;
   private final JPanel rootPropertiesPane;
   private final ProjectExclusionsPanel exclusionsPanel;
+  private final DevoxxGeniePanel devoxxGeniePanel;
   private SonarLintProjectBindPanel bindPanel;
 
   public SonarLintProjectSettingsPanel(Project project) {
     bindPanel = new SonarLintProjectBindPanel();
     propsPanel = new SonarLintProjectPropertiesPanel();
     exclusionsPanel = new ProjectExclusionsPanel(project);
+    devoxxGeniePanel = new DevoxxGeniePanel();
     root = new JPanel(new BorderLayout());
     var tabs = new JBTabbedPane();
 
@@ -63,6 +65,7 @@ public class SonarLintProjectSettingsPanel implements Disposable {
     tabs.insertTab("Bind to SonarQube (Server, Cloud)", null, rootBindPane, "Configure the binding to SonarQube (Server, Cloud)", 0);
     tabs.insertTab("File Exclusions", null, exclusionsPanel.getComponent(), "Configure which files to exclude from analysis", 1);
     tabs.insertTab("Analysis Properties", null, rootPropertiesPane, "Configure analysis properties", 2);
+    tabs.insertTab("DevoxxGenie", null, devoxxGeniePanel.getComponent(), "Configure DevoxxGenie prompt template", 3);
 
     root.add(tabs, BorderLayout.CENTER);
   }
@@ -75,6 +78,7 @@ public class SonarLintProjectSettingsPanel implements Disposable {
     propsPanel.setAnalysisProperties(projectSettings.getAdditionalProperties());
     bindPanel.load(servers, projectSettings, moduleOverrides);
     exclusionsPanel.load(projectSettings);
+    devoxxGeniePanel.load(projectSettings);
   }
 
   public void save(Project project, SonarLintProjectSettings projectSettings) throws ConfigurationException {
@@ -102,6 +106,7 @@ public class SonarLintProjectSettingsPanel implements Disposable {
     }
     projectSettings.setAdditionalProperties(propsPanel.getProperties());
     exclusionsPanel.save(projectSettings);
+    devoxxGeniePanel.save(projectSettings);
 
     var bindingManager = getService(project, ProjectBindingManager.class);
     if (bindingEnabled) {
@@ -138,7 +143,8 @@ public class SonarLintProjectSettingsPanel implements Disposable {
   public boolean isModified(SonarLintProjectSettings projectSettings) {
     return bindPanel.isModified(projectSettings)
       || exclusionsPanel.isModified(projectSettings)
-      || propsPanel.isModified(projectSettings);
+      || propsPanel.isModified(projectSettings)
+      || devoxxGeniePanel.isModified(projectSettings);
   }
 
   @Override
