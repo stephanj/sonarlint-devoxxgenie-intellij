@@ -1,5 +1,11 @@
 # Changelog
 
+## 11.15.3 (2026-02-21)
+
+### DevoxxGenie Integration
+
+- **Configurable task template**: A new "Task Template" section in the DevoxxGenie Project Settings tab lets users customize the task body written to `backlog/tasks/*.md` when using "Create DevoxxGenie Tasks". Available placeholders: `{ruleKey}`, `{fileName}`, `{relativePath}`, `{line}`, `{severity}`, `{message}`. Includes a "Reset to Default" button. The template is also used when tasks are created via DevoxxGenie's `ExternalTaskService`.
+
 ## 11.15.2 (2026-02-20)
 
 ### Bug Fixes
