@@ -41,6 +41,7 @@ public final class SonarLintProjectSettings {
   private List<String> fileExclusions = new ArrayList<>();
   private boolean bindingSuggestionsEnabled = true;
   private String devoxxGeniePromptTemplate = DEFAULT_DEVOXX_GENIE_PROMPT_TEMPLATE;
+  private String devoxxGenieTaskTemplate = DEFAULT_DEVOXX_GENIE_TASK_TEMPLATE;
 
   public static final String DEFAULT_DEVOXX_GENIE_PROMPT_TEMPLATE =
     "Fix the following SonarQube issue in my code.\n"
@@ -56,6 +57,29 @@ public final class SonarLintProjectSettings {
       + "```\n"
       + "\n"
       + "Please suggest a fix for this issue. Explain what the problem is and provide the corrected code.\n";
+
+  public static final String DEFAULT_DEVOXX_GENIE_TASK_TEMPLATE =
+    "# Fix `{ruleKey}`: {message}\n"
+      + "\n"
+      + "## Description\n"
+      + "\n"
+      + "SonarQube for IDE detected a code quality issue.\n"
+      + "\n"
+      + "- **Rule:** `{ruleKey}`\n"
+      + "- **File:** `{relativePath}`\n"
+      + "- **Line:** {line}\n"
+      + "- **Severity:** {severity}\n"
+      + "- **Issue:** {message}\n"
+      + "\n"
+      + "## Task\n"
+      + "\n"
+      + "Fix the SonarQube issue `{ruleKey}` at line {line} in `{relativePath}`.\n"
+      + "\n"
+      + "## Acceptance Criteria\n"
+      + "\n"
+      + "- [ ] Issue `{ruleKey}` at `{fileName}:{line}` is resolved\n"
+      + "- [ ] No new SonarQube issues introduced by the fix\n"
+      + "- [ ] All existing tests continue to pass\n";
 
   public boolean isVerboseEnabled() {
     return verboseEnabled || "true".equals(System.getProperty("sonarlint.logs.verbose"));
@@ -145,6 +169,14 @@ public final class SonarLintProjectSettings {
 
   public void setDevoxxGeniePromptTemplate(String devoxxGeniePromptTemplate) {
     this.devoxxGeniePromptTemplate = devoxxGeniePromptTemplate;
+  }
+
+  public String getDevoxxGenieTaskTemplate() {
+    return devoxxGenieTaskTemplate;
+  }
+
+  public void setDevoxxGenieTaskTemplate(String devoxxGenieTaskTemplate) {
+    this.devoxxGenieTaskTemplate = devoxxGenieTaskTemplate;
   }
 
 }

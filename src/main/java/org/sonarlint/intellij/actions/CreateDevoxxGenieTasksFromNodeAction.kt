@@ -32,6 +32,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import org.sonarlint.intellij.config.Settings
 import org.sonarlint.intellij.finding.issue.LiveIssue
 import org.sonarlint.intellij.util.DataKeys
 import org.sonarsource.sonarlint.core.client.utils.ImpactSeverity
@@ -96,7 +97,7 @@ class CreateDevoxxGenieTasksFromNodeAction : AnAction(
             var count = 0
             for (issue in issues) {
                 try {
-                    method.invoke(service, buildTitle(issue), buildDescription(issue), priority(issue), labels(issue))
+                    method.invoke(service, buildTitle(issue), buildDescription(project, issue), priority(issue), labels(issue))
                     count++
                 } catch (_: Exception) { }
             }
@@ -123,7 +124,7 @@ class CreateDevoxxGenieTasksFromNodeAction : AnAction(
             val ruleKey = issue.getRuleKey()
             val taskNumber = nextTaskNumber + index
             val taskFile = File(backlogDir, buildTaskFileName(taskNumber, ruleKey, file.name, lineNumber))
-            taskFile.writeText(buildTaskContent(issue, relativePath, lineNumber, ruleKey, file.name, taskNumber, createdDate))
+            taskFile.writeText(buildTaskContent(project, issue, relativePath, lineNumber, ruleKey, file.name, taskNumber, createdDate))
             createdCount++
         }
 
@@ -136,29 +137,21 @@ class CreateDevoxxGenieTasksFromNodeAction : AnAction(
         return "Fix ${issue.getRuleKey()} in ${issue.file().name} at line $lineNumber"
     }
 
-    private fun buildDescription(issue: LiveIssue): String {
+    private fun buildDescription(project: Project, issue: LiveIssue): String {
+        val template = Settings.getSettingsFor(project).devoxxGenieTaskTemplate
         val ruleKey = issue.getRuleKey()
-        val message = issue.getMessage()
+        val message = issue.getMessage() ?: ""
         val severity = severityLabel(issue)
         val lineNumber = getLineNumber(issue)
         val fileName = issue.file().name
-        return """
-SonarQube for IDE detected a code quality issue.
-
-- **Rule:** `$ruleKey`
-- **File:** `$fileName`
-- **Line:** $lineNumber
-- **Severity:** $severity
-- **Issue:** $message
-
-Fix the SonarQube issue `$ruleKey` at line $lineNumber in `$fileName`.
-
-## Acceptance Criteria
-
-- [ ] Issue `$ruleKey` at `$fileName:$lineNumber` is resolved
-- [ ] No new SonarQube issues introduced by the fix
-- [ ] All existing tests continue to pass
-""".trimIndent()
+        val relativePath = computeRelativePath(issue.file().path, project.basePath ?: fileName)
+        return template
+            .replace("{ruleKey}", ruleKey)
+            .replace("{fileName}", fileName)
+            .replace("{relativePath}", relativePath)
+            .replace("{line}", lineNumber.toString())
+            .replace("{severity}", severity)
+            .replace("{message}", message)
     }
 
     private fun priority(issue: LiveIssue): String {
@@ -232,7 +225,7 @@ Fix the SonarQube issue `$ruleKey` at line $lineNumber in `$fileName`.
     }
 
     private fun buildTaskContent(
-        issue: LiveIssue, relativePath: String, lineNumber: Int,
+        project: Project, issue: LiveIssue, relativePath: String, lineNumber: Int,
         ruleKey: String, fileName: String, taskNumber: Int, createdDate: String
     ): String {
         val priority = priority(issue)
@@ -240,6 +233,14 @@ Fix the SonarQube issue `$ruleKey` at line $lineNumber in `$fileName`.
         val message = issue.getMessage()
         val rulePrefix = ruleKey.substringBefore(':').lowercase()
         val ordinal = taskNumber * 1000
+
+        val body = Settings.getSettingsFor(project).devoxxGenieTaskTemplate
+            .replace("{ruleKey}", ruleKey)
+            .replace("{fileName}", fileName)
+            .replace("{relativePath}", relativePath)
+            .replace("{line}", lineNumber.toString())
+            .replace("{severity}", severity)
+            .replace("{message}", message ?: "")
 
         return """---
 id: TASK-$taskNumber
@@ -257,27 +258,6 @@ documentation: []
 ordinal: $ordinal
 ---
 
-# Fix `$ruleKey`: $message
-
-## Description
-
-SonarQube for IDE detected a code quality issue.
-
-- **Rule:** `$ruleKey`
-- **File:** `$relativePath`
-- **Line:** $lineNumber
-- **Severity:** $severity
-- **Issue:** $message
-
-## Task
-
-Fix the SonarQube issue `$ruleKey` at line $lineNumber in `$relativePath`.
-
-## Acceptance Criteria
-
-- [ ] Issue `$ruleKey` at `$fileName:$lineNumber` is resolved
-- [ ] No new SonarQube issues introduced by the fix
-- [ ] All existing tests continue to pass
-"""
+$body"""
     }
 }

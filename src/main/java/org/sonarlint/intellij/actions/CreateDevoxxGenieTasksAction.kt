@@ -30,6 +30,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import org.sonarlint.intellij.config.Settings
 import org.sonarlint.intellij.finding.issue.LiveIssue
 import org.sonarlint.intellij.ui.nodes.FileNode
 import org.sonarlint.intellij.ui.nodes.IssueNode
@@ -77,7 +78,7 @@ class CreateDevoxxGenieTasksAction(
 
             val taskFileName = buildTaskFileName(taskNumber, sanitizedRule, fileName, lineNumber)
             val taskFile = File(backlogDir, taskFileName)
-            val content = buildTaskContent(issue, relativePath, lineNumber, ruleKey, file.name, taskNumber, createdDate)
+            val content = buildTaskContent(project, issue, relativePath, lineNumber, ruleKey, file.name, taskNumber, createdDate)
             taskFile.writeText(content)
             createdCount++
         }
@@ -201,6 +202,7 @@ class CreateDevoxxGenieTasksAction(
     }
 
     private fun buildTaskContent(
+        project: com.intellij.openapi.project.Project,
         issue: LiveIssue,
         relativePath: String,
         lineNumber: Int,
@@ -214,6 +216,14 @@ class CreateDevoxxGenieTasksAction(
         val message = issue.getMessage()
         val rulePrefix = ruleKey.substringBefore(':').lowercase()
         val ordinal = taskNumber * 1000
+
+        val body = Settings.getSettingsFor(project).devoxxGenieTaskTemplate
+            .replace("{ruleKey}", ruleKey)
+            .replace("{fileName}", fileName)
+            .replace("{relativePath}", relativePath)
+            .replace("{line}", lineNumber.toString())
+            .replace("{severity}", severity)
+            .replace("{message}", message ?: "")
 
         return """---
 id: TASK-$taskNumber
@@ -231,27 +241,6 @@ documentation: []
 ordinal: $ordinal
 ---
 
-# Fix `$ruleKey`: $message
-
-## Description
-
-SonarQube for IDE detected a code quality issue.
-
-- **Rule:** `$ruleKey`
-- **File:** `$relativePath`
-- **Line:** $lineNumber
-- **Severity:** $severity
-- **Issue:** $message
-
-## Task
-
-Fix the SonarQube issue `$ruleKey` at line $lineNumber in `$relativePath`.
-
-## Acceptance Criteria
-
-- [ ] Issue `$ruleKey` at `$fileName:$lineNumber` is resolved
-- [ ] No new SonarQube issues introduced by the fix
-- [ ] All existing tests continue to pass
-"""
+$body"""
     }
 }

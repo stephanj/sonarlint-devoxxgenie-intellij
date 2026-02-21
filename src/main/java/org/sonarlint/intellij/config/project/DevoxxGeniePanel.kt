@@ -28,32 +28,41 @@ import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.JSplitPane
 
 class DevoxxGeniePanel : ConfigurationPanel<SonarLintProjectSettings> {
 
-    private val textArea = JBTextArea().apply {
+    private val promptTextArea = JBTextArea().apply {
         lineWrap = true
         wrapStyleWord = true
-        rows = 20
+        rows = 10
     }
 
-    private val panel = JPanel(BorderLayout(0, 8)).apply {
+    private val taskTextArea = JBTextArea().apply {
+        lineWrap = true
+        wrapStyleWord = true
+        rows = 10
+    }
+
+    private fun buildSection(
+        title: String,
+        descriptionHtml: String,
+        textArea: JBTextArea,
+        resetAction: () -> Unit
+    ): JPanel = JPanel(BorderLayout(0, 8)).apply {
         border = BorderFactory.createEmptyBorder(8, 8, 8, 8)
 
-        val description = JBLabel(
-            "<html>Customize the prompt template sent to DevoxxGenie when using &quot;Fix with DevoxxGenie&quot;.<br><br>" +
-                "Available placeholders: <b>{ruleName}</b>, <b>{ruleKey}</b>, <b>{message}</b>, " +
-                "<b>{filePath}</b>, <b>{line}</b>, <b>{codeSnippet}</b></html>"
-        )
-        add(description, BorderLayout.NORTH)
-
-        val scrollPane = JBScrollPane(textArea)
-        add(scrollPane, BorderLayout.CENTER)
+        val header = JBLabel("<html><b>$title</b></html>")
+        val description = JBLabel("<html>$descriptionHtml</html>")
+        val headerPanel = JPanel(BorderLayout(0, 4)).apply {
+            add(header, BorderLayout.NORTH)
+            add(description, BorderLayout.CENTER)
+        }
+        add(headerPanel, BorderLayout.NORTH)
+        add(JBScrollPane(textArea), BorderLayout.CENTER)
 
         val resetButton = JButton("Reset to Default").apply {
-            addActionListener {
-                textArea.text = SonarLintProjectSettings.DEFAULT_DEVOXX_GENIE_PROMPT_TEMPLATE
-            }
+            addActionListener { resetAction() }
         }
         val buttonPanel = JPanel(BorderLayout()).apply {
             add(resetButton, BorderLayout.WEST)
@@ -61,17 +70,45 @@ class DevoxxGeniePanel : ConfigurationPanel<SonarLintProjectSettings> {
         add(buttonPanel, BorderLayout.SOUTH)
     }
 
+    private val panel = JSplitPane(JSplitPane.VERTICAL_SPLIT).apply {
+        border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
+        resizeWeight = 0.5
+
+        topComponent = buildSection(
+            title = "Chat Prompt",
+            descriptionHtml = "Customize the prompt template sent to DevoxxGenie when using &quot;Fix with DevoxxGenie&quot;.<br><br>" +
+                "Available placeholders: <b>{ruleName}</b>, <b>{ruleKey}</b>, <b>{message}</b>, " +
+                "<b>{filePath}</b>, <b>{line}</b>, <b>{codeSnippet}</b>",
+            textArea = promptTextArea
+        ) {
+            promptTextArea.text = SonarLintProjectSettings.DEFAULT_DEVOXX_GENIE_PROMPT_TEMPLATE
+        }
+
+        bottomComponent = buildSection(
+            title = "Task Template",
+            descriptionHtml = "Customize the task body written to <code>backlog/tasks/*.md</code> when using &quot;Create DevoxxGenie Tasks&quot;.<br><br>" +
+                "Available placeholders: <b>{ruleKey}</b>, <b>{fileName}</b>, <b>{relativePath}</b>, " +
+                "<b>{line}</b>, <b>{severity}</b>, <b>{message}</b>",
+            textArea = taskTextArea
+        ) {
+            taskTextArea.text = SonarLintProjectSettings.DEFAULT_DEVOXX_GENIE_TASK_TEMPLATE
+        }
+    }
+
     override fun getComponent(): JComponent = panel
 
     override fun isModified(settings: SonarLintProjectSettings): Boolean {
-        return textArea.text != settings.devoxxGeniePromptTemplate
+        return promptTextArea.text != settings.devoxxGeniePromptTemplate
+            || taskTextArea.text != settings.devoxxGenieTaskTemplate
     }
 
     override fun load(settings: SonarLintProjectSettings) {
-        textArea.text = settings.devoxxGeniePromptTemplate
+        promptTextArea.text = settings.devoxxGeniePromptTemplate
+        taskTextArea.text = settings.devoxxGenieTaskTemplate
     }
 
     override fun save(settings: SonarLintProjectSettings) {
-        settings.devoxxGeniePromptTemplate = textArea.text
+        settings.devoxxGeniePromptTemplate = promptTextArea.text
+        settings.devoxxGenieTaskTemplate = taskTextArea.text
     }
 }
