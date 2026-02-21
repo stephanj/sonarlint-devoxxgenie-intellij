@@ -31,7 +31,8 @@
       "Bash(python3:*)",
       "Bash(git tag:*)",
       "Bash(git checkout:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "Bash(jar tf:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
