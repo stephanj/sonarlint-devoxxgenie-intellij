@@ -26,7 +26,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import org.sonarlint.intellij.common.util.SonarLintUtils.getService
 import org.sonarlint.intellij.core.BackendService
 import org.sonarlint.intellij.core.EnabledLanguages
@@ -43,12 +43,12 @@ import org.sonarsource.sonarlint.core.client.utils.ClientLogOutput
  *
  * This runs once per IDE session to avoid redundant checks.
  */
-class CFamilyAnalyzerStartupActivity : StartupActivity {
+class CFamilyAnalyzerStartupActivity : ProjectActivity {
 
     private var hasRun = false
     private val lock = Any()
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
         if (ApplicationManager.getApplication().isUnitTestMode ||
             !EnabledLanguages.isClionEnabled()
         ) {
