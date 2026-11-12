@@ -21,10 +21,10 @@ package org.sonarlint.intellij.dogfood
 
 import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.panels.HorizontalLayout
 import java.awt.Dimension
 import javax.swing.JPanel
 import javax.swing.JTextField
-import org.jdesktop.swingx.HorizontalLayout
 
 class DogfoodPanel : JPanel() {
 

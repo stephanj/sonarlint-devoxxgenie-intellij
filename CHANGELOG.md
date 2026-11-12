@@ -1,5 +1,19 @@
 # Changelog
 
+## 11.15.5 (2026-11-12)
+
+### Bug Fixes
+
+- **Settings stuck loading in IntelliJ IDEA 2026.3**: Removed the rules renderer's dependency on the unavailable SwingX library, restoring access to SonarQube for IDE settings, including the Node.js path.
+- **Other SwingX dependencies**: Use IntelliJ's horizontal layout for code-fix inlay buttons and the internal credentials panel.
+
+## 11.15.4 (2026-11-12)
+
+### Bug Fixes
+
+- **IntelliJ IDEA 2026.3 startup**: Fixed `DefaultVcsService` initialization by allowing the IDE to inject its project constructor.
+- **Project startup activities**: Migrated service initialization, the welcome page, and the CFamily analyzer check to `ProjectActivity`, so current IDEs no longer skip them.
+
 ## 11.15.3 (2026-02-21)
 
 ### DevoxxGenie Integration
